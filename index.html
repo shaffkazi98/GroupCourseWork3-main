@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poland Academy</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <!-- MDB -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.css" rel="stylesheet" />
+    <link rel="manifest" href="index.webmanifest">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+        }
+    </script>
+</head>
+
+<body>
+    <div id="app" class="display-flex-col width-height">
+        <!------------------ HEader Section----------------- -->
+        <div class="container-fluid bg-color" >
+            <div class="row">
+                <div class="col-md-10">
+                    <h1 class="text-white">{{sitename}}</h1>
+                </div>
+                <div class="col-md-2">
+                    <div v-if="showItems">
+                        <button class="btn btn-white mt-2" v-if="canRemoveFromCart" v-on:click="checkout">
+                    {{cartItemCount}}
+                    <i class="bx bx-cart"></i>
+                    Checkout
+                </button>
+                        <button class="btn btn-white text-white mt-2 border" disabled="disabled" v-else>
+                    {{cartItemCount}}
+                    <i class="bx bx-cart"></i>
+                </button>
+                    </div>
+                    <div v-else>
+                        <button class="btn btn-white mt-2" v-on:click="checkout">
+                    <i class='bx bx-left-arrow-alt'></i>
+                    Back
+                </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!------------------ HEader Section----------------- -->
+
+
+        <main class="display-flex-col ">
+            <hr>
+            <section id="subject_page" class="display-flex-col bg-color width-height" v-if="showItems">
+                <div class="container-fluid">
+                    <div class="row">
+                      
+                        <div class="col-md-9">
+                            <div id="search" class="m-3">
+                                <div class="form-outline ">
+                                    <input type="search" v-model.trim="searchInput" name="search" class="form-group" placeholder="Search" aria-label="Search" />
+                                </div>
+                                <!-- <label for="search">Search: </label>
+                    <input  type="text" v-model.trim="searchInput"> -->
+                            </div>
+                        </div>
+                          <div class="col-md-3">
+                            <h2 class="bg-color text-white display-flex-col m-3 fw-bold">Subjects page</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="container" class="display-flex-row border width-height">
+                
+                    <div id="subjects_container" class="display-flex-col text-white width-height">
+
+                        <div id="subjects">
+                            <div class="subject m-3" v-for="subject in filterItems">
+                                <div style="width: 100%; display: inline-flex; align-items: center;">
+                                    <div class="info_container">
+                                        <p>Subject: {{subject.lesson}}</p>
+                                        <p>Location: {{subject.location}}</p>
+                                        <p>Price: £{{subject.price}}</p>
+                                        <p>Spaces: {{subject.spaces}}</p>
+                                    </div>
+                                    <figure>
+                                        <img class="image" v-bind:src="subject.image">
+                                    </figure>
+                                </div>
+                                <button class="btn btn-white" v-if="subject.spaces > 0" v-on:click="addToCart(subject)">Add To Cart</button>
+                                <button class="btn btn-disable border" v-else disabled>Add To Cart</button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div id="filters" class="text-white bg-primary m-4">
+                        <h3>Sort By</h3>
+                        <div id="sort_by">
+                            <div class="radio_container">
+                                <input name="sort_radio" type="radio" v-on:click="changeCriteria('lesson')" checked>
+                                <label for="sort_radio">Subject</label>
+                            </div>
+                            <div class="radio_container">
+                                <input name="sort_radio" type="radio" v-on:click="changeCriteria('location')">
+                                <label for="sort_radio">Location</label>
+                            </div>
+                            <div class="radio_container">
+                                <input name="sort_radio" type="radio" v-on:click="changeCriteria('price')">
+                                <label for="sort_radio">Price</label>
+                            </div>
+                            <div class="radio_container">
+                                <input name="sort_radio" type="radio" v-on:click="changeCriteria('availability')">
+                                <label for="sort_radio">Availability</label>
+                            </div>
+                        </div>
+                        <h3>Order</h3>
+                        <div id="order_by">
+                            <div class="radio_container">
+                                <input name="order_radio" type="radio" v-on:click="changeOrder('ascending')" checked>
+                                <label for="order_radio">Ascending</label>
+                            </div>
+                            <div class="radio_container">
+                                <input name="order_radio" v-on:click="changeOrder('descending')" type="radio">
+                                <label for="order_radio">Descending</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="cart_page" class="display-flex-col bg-color width-height border" v-else>
+                <h4>Cart Page</h4>
+                <div id="cart_container" class="display-flex-row width-height">
+                    <div id="Checkout" class="display-flex-col height">
+                        <h2>Checkout Section</h2>
+                        <div class="display-flex-col">
+                            <div class="form-outline mb-4">
+                                <label class="form-label" for="form1Example1">Name:</label>
+                                <input type="email" v-model.trim="userData.name" id="form1Example1" class="form-control border">
+                            </div>
+                            <!-- <div class="input_container">
+                                <label for="name">Name: </label>
+                                <input type="text" v-model.trim="userData.name">
+                            </div> -->
+                            <div class="form-outline mb-4">
+                                <label class="form-label" for="form1Example1">Phone: </label>
+                                <input type="email" v-model.trim="userData.phone" class="form-control border">
+                            </div>
+                            <!-- <div class="input_container">
+                                <label for="phone" pattern="[A-Za-z]">Phone: </label>
+                                <input type="text" v-model.trim="userData.phone">
+                            </div> -->
+                            <a href="index.html"><button v-if="canCheckout" v-on:click="submit_cart">Submit</button></a>
+                        </div>
+                    </div>
+                    <div id="subjects_container" class="display-flex-col  width-height">
+                        <div id="subjects">
+                            <div class="subject m-3" v-for="subject in cart">
+                                <div style="width: 100%; display: inline-flex; align-items: center;">
+                                    <div class="info_container">
+                                        <p>Subject: {{subject.item.lesson}}</p>
+                                        <p>Location: {{subject.item.location}}</p>
+                                        <p>Price: £{{subject.item.price}}</p>
+                                    </div>
+                                    <figure>
+                                        <img class="image" v-bind:src="subject.item.image">
+                                    </figure>
+                                </div>
+                                <button class="btn btn-white border" v-on:click="removeFromCart(subject.item)">Remove From Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+<script src="items.js"></script>
+<script>
+    var app = new Vue({
+        el: "#app",
+        data: {
+            sitename: "Poland Academy",
+            criteria: "lesson",
+            order: "ascending",
+            searchInput: "",
+            cart: [],
+            showItems: true,
+            items: [...items],
+            userData: {
+                name: "",
+                phone: "",
+            },
+        },
+        computed: {
+            can_showSubjects() {
+                return this.showSubjects
+            },
+            cartItemCount() {
+                return this.cart.length || "";
+            },
+            canRemoveFromCart() {
+                return this.cart.length > 0
+            },
+            canCheckout() {
+                if (this.userData.phone.match(/^[0-9]+$/) != null & this.userData.name.match(/^[A-Za-z]+$/) != null) {
+                    return true
+                }
+                return false
+            },
+            filterItems() {
+                if (this.criteria != "all" & this.criteria != "availability" & this.criteria != "price") {
+                    return this.items.filter(x => x[this.criteria].toLowerCase().includes(this.searchInput)).sort((a, b) => {
+                        switch (this.order) {
+                            case "ascending":
+                                if (a[this.criteria] > b[this.criteria]) {
+                                    return 1
+                                }
+                                if (b[this.criteria] > a[this.criteria]) {
+                                    return -1
+                                }
+                                return 0
+                                break;
+                            case "descending":
+                                if (a[this.criteria] > b[this.criteria]) {
+                                    return -1
+                                }
+                                if (b[this.criteria] > a[this.criteria]) {
+                                    return 1
+                                }
+                                return 0
+                                break;
+                        }
+                    })
+                }
+                if (this.criteria == "availability") {
+                    return this.items.filter(x => x["spaces"] > 0)
+                }
+                if (this.criteria == "price") {
+                    return this.items.filter(x => (x["price"] + "").includes(this.searchInput)).sort((a, b) => {
+                        switch (this.order) {
+                            case "ascending":
+                                if (a[this.criteria] > b[this.criteria]) {
+                                    return 1
+                                }
+                                if (b[this.criteria] > a[this.criteria]) {
+                                    return -1
+                                }
+                                return 0
+                                break;
+                            case "descending":
+                                if (a[this.criteria] > b[this.criteria]) {
+                                    return -1
+                                }
+                                if (b[this.criteria] > a[this.criteria]) {
+                                    return 1
+                                }
+                                return 0
+                                break;
+                        }
+                    })
+                }
+            }
+        },
+        methods: {
+            addToCart(item) {
+                if (item.spaces > 0) {
+                    item.spaces--
+                        const data = {
+                            "cart_id": `${item.lesson[0]}` + `-${item.location[0]}-` + Math.ceil(Math.random() * 10000), //adding an item to a cart while generating unique id for all items
+                            "item": item
+                        }
+                    this.cart.push(data)
+                }
+            },
+            removeFromCart(cart_item) {
+                cart_item.spaces++
+                    for (let i = 0; i < this.cart.length; i++) {
+                        const item = this.cart[i]
+                        if (cart_item.id == item.id) {
+                            this.cart.splice(i, 1)
+                            break;
+                        }
+                    }
+
+            },
+            submit_cart() {
+                alert("Submitted cart")
+            },
+            checkout() {
+                this.showItems = this.showItems ? false : true
+            },
+            changeCriteria(criteria) {
+                this.criteria = criteria
+            },
+            changeOrder(order) {
+                this.order = order
+            }
+        },
+    })
+</script>
+
+</html>
